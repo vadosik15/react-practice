@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable react/button-has-type */
+import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import './App.scss';
 
@@ -39,14 +40,30 @@ const InitialLIstFull = initialList.map(point => ({
 }));
 
 export const App = () => {
-  const [prodList] = useState(InitialLIstFull);
-  const [userSort, setUserSort] = useState('');
+  const [prodList, setProdList] = useState(InitialLIstFull);
+  const [selectedUser, setSelectedUser] = useState(0);
+  const [query, setQuery] = useState('');
 
-  const handleSortByPeople = (event) => {
-    event.target
-  }
+  const filterBy = (IDUSer) => {
+    setSelectedUser(+IDUSer);
 
-  console.log(prodList);
+    const newProd = InitialLIstFull.filter(point => point.user.id === +IDUSer);
+
+    return setProdList(newProd);
+  };
+
+  useEffect(() => {
+    const visibleProdList = InitialLIstFull.filter(prod => prod
+      .product.toLowerCase().includes(query.toLowerCase().trim()));
+
+    setProdList(visibleProdList);
+  }, [query]);
+
+  const reset = () => {
+    setSelectedUser(0);
+    setQuery('');
+    setProdList(InitialLIstFull);
+  };
 
   return (
     <div className="section">
@@ -58,22 +75,35 @@ export const App = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
-              <a
+              <button
                 data-cy="FilterAllUsers"
                 href="#/"
+                className={classNames(
+                  selectedUser === 0
+                    ? ('is-active')
+                    : (''),
+                )}
+                value={0}
+                onClick={reset}
               >
                 All
-              </a>
+              </button>
               {
                 usersFromServer.map(user => (
-                  <a
+                  <button
                     data-cy="FilterUser"
                     href="#/"
+                    value={user.id}
+                    className={classNames(
+                      selectedUser === user.id
+                        ? ('is-active')
+                        : (''),
+                    )}
                     key={user.id}
-                    onClick={handleSortByPeople}
+                    onClick={event => filterBy(event.target.value)}
                   >
                     {user.name}
-                  </a>
+                  </button>
                 ))
               }
             </p>
@@ -85,7 +115,10 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                  }}
                 />
 
                 <span className="icon is-left">
@@ -93,12 +126,16 @@ export const App = () => {
                 </span>
 
                 <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
+                  {query !== ''
+                    && (
+                      <button
+                        data-cy="ClearButton"
+                        type="button"
+                        className="delete"
+                        onClick={reset}
+                      />
+                    )
+                  }
                 </span>
               </p>
             </div>
